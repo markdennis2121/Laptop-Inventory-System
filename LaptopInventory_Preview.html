@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>LaptopTrack – Inventory System Preview</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<link rel="stylesheet" href="css/style.css">
+<script src="js/app.js"></script>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-icon"><i class="fas fa-laptop"></i></div>
+    <div><span class="brand-name">LaptopTrack</span><span class="brand-sub">Inventory System</span></div>
+  </div>
+  <nav class="sidebar-nav">
+    <button class="nav-item active" onclick="showPage('dashboard',this)"><i class="fas fa-gauge-high"></i><span>Dashboard</span></button>
+    <button class="nav-item" onclick="showPage('list',this)"><i class="fas fa-list-ul"></i><span>All Laptops</span></button>
+    <button class="nav-item" onclick="showPage('create',this)"><i class="fas fa-plus-circle"></i><span>Add Laptop</span></button>
+    <div class="nav-divider">Reports</div>
+    <button class="nav-item" onclick="showPage('history',this)"><i class="fas fa-people-arrows"></i><span>Assignment History</span></button>
+    <button class="nav-item" onclick="showPage('audit',this)"><i class="fas fa-clock-rotate-left"></i><span>Audit Log</span></button>
+    <button class="nav-item" onclick="showPage('trash',this)"><i class="fas fa-trash-can"></i><span>Trash / Deleted</span></button>
+  </nav>
+  <div class="sidebar-footer"><i class="fas fa-shield-halved"></i> IT Asset Management</div>
+</aside>
+
+<div class="main-wrapper">
+  <header class="topbar">
+    <h1 class="page-title" id="pageTitle">Dashboard</h1>
+    <button class="btn btn-export btn-sm" onclick="alert('In the real app, this downloads a formatted .xlsx file!')"><i class="fas fa-file-excel"></i> Export Excel</button>
+  </header>
+  <main class="content">
+    <div id="toast-area"></div>
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="stats-grid">
+        <div class="stat-card blue"><div class="stat-icon"><i class="fas fa-laptop"></i></div><div class="stat-value" id="s-total">8</div><div class="stat-label">Total Laptops</div></div>
+        <div class="stat-card green"><div class="stat-icon"><i class="fas fa-circle-check"></i></div><div class="stat-value" id="s-avail">2</div><div class="stat-label">Available</div></div>
+        <div class="stat-card blue"><div class="stat-icon"><i class="fas fa-user-check"></i></div><div class="stat-value" id="s-inuse">4</div><div class="stat-label">In Use</div></div>
+        <div class="stat-card purple"><div class="stat-icon"><i class="fas fa-screwdriver-wrench"></i></div><div class="stat-value" id="s-repair">1</div><div class="stat-label">Under Repair</div></div>
+        <div class="stat-card gray"><div class="stat-icon"><i class="fas fa-box-archive"></i></div><div class="stat-value" id="s-retired">1</div><div class="stat-label">Retired</div></div>
+        <div class="stat-card orange"><div class="stat-icon"><i class="fas fa-clock"></i></div><div class="stat-value" id="s-wsoon">2</div><div class="stat-label">Warranty Expiring</div></div>
+        <div class="stat-card red"><div class="stat-icon"><i class="fas fa-triangle-exclamation"></i></div><div class="stat-value" id="s-wexp">2</div><div class="stat-label">Warranty Expired</div></div>
+        <div class="stat-card red"><div class="stat-icon"><i class="fas fa-trash-can"></i></div><div class="stat-value" id="s-trash">0</div><div class="stat-label">In Trash</div></div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title"><i class="fas fa-list-ul" style="color:var(--accent);margin-right:8px"></i>Recent Laptops</span>
+          <div style="display:flex;gap:7px">
+            <button class="btn btn-primary btn-sm" onclick="showPage('create',null)"><i class="fas fa-plus"></i> Add New</button>
+            <button class="btn btn-ghost btn-sm" onclick="showPage('list',null)"><i class="fas fa-eye"></i> View All</button>
+          </div>
+        </div>
+        <div class="table-wrapper"><table>
+          <thead><tr><th>Brand / Model</th><th>Serial No.</th><th>Status</th><th>Assigned To</th><th>Warranty</th><th>Actions</th></tr></thead>
+          <tbody id="dash-tbody"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- LIST -->
+    <div class="page" id="page-list">
+      <div class="card" style="margin-bottom:18px">
+        <div class="search-bar">
+          <div class="search-input-wrap"><i class="fas fa-magnifying-glass"></i><input type="text" id="searchInput" placeholder="Search brand, model, serial, employee..." class="form-control" oninput="renderList()"/></div>
+          <select class="form-control" style="width:150px" id="statusFilter" onchange="renderList()"><option value="">All Statuses</option><option>Available</option><option>In Use</option><option>Under Repair</option><option>Retired</option></select>
+          <select class="form-control" style="width:130px" id="brandFilter" onchange="renderList()"><option value="">All Brands</option><option>Dell</option><option>HP</option><option>Lenovo</option><option>Apple</option><option>Asus</option></select>
+          <button class="btn btn-ghost" onclick="document.getElementById('searchInput').value='';document.getElementById('statusFilter').value='';document.getElementById('brandFilter').value='';renderList()"><i class="fas fa-rotate-right"></i> Reset</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title"><i class="fas fa-laptop" style="color:var(--accent);margin-right:8px"></i>All Laptops <span id="listCount" style="font-size:12px;color:var(--text-muted);font-weight:400"></span></span>
+          <div style="display:flex;gap:7px">
+            <button class="btn btn-primary btn-sm" onclick="showPage('create',null)"><i class="fas fa-plus"></i> Add Laptop</button>
+            <button class="btn btn-export btn-sm" onclick="alert('Exporting to Excel...')"><i class="fas fa-file-excel"></i> Export</button>
+          </div>
+        </div>
+        <div class="table-wrapper"><table>
+          <thead><tr><th>#</th><th>Brand / Model</th><th>Serial No.</th><th>Specs</th><th>Status</th><th>Assigned To</th><th>Purchase</th><th>Warranty</th><th>Actions</th></tr></thead>
+          <tbody id="list-tbody"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- CREATE -->
+    <div class="page" id="page-create">
+      <div style="max-width:860px">
+        <div class="card">
+          <div class="card-header"><span class="card-title"><i class="fas fa-plus-circle" style="color:var(--accent);margin-right:8px"></i>Add New Laptop</span><button class="btn btn-ghost btn-sm" onclick="showPage('list',null)"><i class="fas fa-arrow-left"></i> Back</button></div>
+          <div style="margin-bottom:20px">
+            <div class="section-label"><i class="fas fa-laptop"></i> Laptop Details</div>
+            <div class="form-grid">
+              <div class="form-group"><label class="form-label">Brand <span class="req">*</span></label><input class="form-control" id="f_brand" placeholder="e.g. Dell, HP, Lenovo"/></div>
+              <div class="form-group"><label class="form-label">Model <span class="req">*</span></label><input class="form-control" id="f_model" placeholder="e.g. Latitude 5520"/></div>
+              <div class="form-group"><label class="form-label">Serial Number <span class="req">*</span></label><input class="form-control" id="f_serial" placeholder="e.g. SN-DELL-009"/></div>
+              <div class="form-group"><label class="form-label">Status <span class="req">*</span></label><select class="form-control" id="f_status"><option>Available</option><option>In Use</option><option>Under Repair</option><option>Retired</option></select></div>
+              <div class="form-group" style="grid-column:1/-1"><label class="form-label">Specifications</label><input class="form-control" id="f_specs" placeholder="e.g. Intel i5, 16GB RAM, 512GB SSD"/></div>
+            </div>
+          </div>
+          <div style="margin-bottom:20px">
+            <div class="section-label"><i class="fas fa-calendar-days"></i> Purchase & Warranty</div>
+            <div class="form-grid">
+              <div class="form-group"><label class="form-label">Purchase Date <span class="req">*</span></label><input type="date" class="form-control" id="f_purchase" value="2025-01-01"/></div>
+              <div class="form-group"><label class="form-label">Warranty Expiry <span class="req">*</span></label><input type="date" class="form-control" id="f_warranty" value="2028-01-01"/></div>
+            </div>
+          </div>
+          <div style="margin-bottom:20px">
+            <div class="section-label"><i class="fas fa-user-tie"></i> Assignment (Optional)</div>
+            <div class="form-grid">
+              <div class="form-group"><label class="form-label">Assigned To</label><input class="form-control" id="f_assignedTo" placeholder="Employee full name"/></div>
+              <div class="form-group"><label class="form-label">Department</label><input class="form-control" id="f_dept" placeholder="e.g. IT Department"/></div>
+              <div class="form-group"><label class="form-label">Assigned Date</label><input type="date" class="form-control" id="f_assignedDate"/></div>
+            </div>
+          </div>
+          <div style="margin-bottom:24px"><div class="form-group"><label class="form-label">Notes</label><textarea class="form-control" id="f_notes" rows="3" placeholder="Additional notes..."></textarea></div></div>
+          <div style="display:flex;gap:9px">
+            <button class="btn btn-primary" onclick="saveLaptop()"><i class="fas fa-floppy-disk"></i> Save Laptop</button>
+            <button class="btn btn-ghost" onclick="showPage('list',null)">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DETAILS -->
+    <div class="page" id="page-details">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;flex-wrap:wrap;gap:9px">
+        <div><h2 id="det_title" style="font-size:20px;font-weight:700;color:#fff"></h2><div style="margin-top:5px;display:flex;gap:8px;align-items:center;flex-wrap:wrap" id="det_badges"></div></div>
+        <div style="display:flex;gap:7px;flex-wrap:wrap">
+          <button class="btn btn-primary btn-sm" onclick="openEditById(currentLaptopId)"><i class="fas fa-pen"></i> Edit</button>
+          <button class="btn btn-danger btn-sm" onclick="document.getElementById('deleteModal').classList.add('open')"><i class="fas fa-trash-can"></i> Delete</button>
+          <button class="btn btn-ghost btn-sm" onclick="showPage('list',null)"><i class="fas fa-arrow-left"></i> Back</button>
+        </div>
+      </div>
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('info',this)"><i class="fas fa-info-circle"></i> Info</button>
+        <button class="tab-btn" onclick="switchTab('dhistory',this)"><i class="fas fa-people-arrows"></i> Assignment History</button>
+        <button class="tab-btn" onclick="switchTab('daudit',this)"><i class="fas fa-clock-rotate-left"></i> Audit Log</button>
+      </div>
+      <div class="tab-panel active card" id="tab-info"><div class="detail-grid" id="det_grid"></div></div>
+      <div class="tab-panel card" id="tab-dhistory"><div class="table-wrapper"><table><thead><tr><th>Assigned To</th><th>Department</th><th>Assigned Date</th><th>Returned</th></tr></thead><tbody id="det_hist_tbody"></tbody></table></div></div>
+      <div class="tab-panel card" id="tab-daudit"><div class="table-wrapper"><table><thead><tr><th>Action</th><th>Changed By</th><th>Date & Time</th><th>Remarks</th></tr></thead><tbody id="det_audit_tbody"></tbody></table></div></div>
+    </div>
+
+    <!-- EDIT -->
+    <div class="page" id="page-edit">
+      <div style="max-width:860px">
+        <div class="card">
+          <div class="card-header"><span class="card-title"><i class="fas fa-pen" style="color:var(--accent);margin-right:8px"></i>Edit Laptop</span><button class="btn btn-ghost btn-sm" onclick="openDetails(currentLaptopId)"><i class="fas fa-arrow-left"></i> Back</button></div>
+          <div style="margin-bottom:20px">
+            <div class="section-label"><i class="fas fa-laptop"></i> Laptop Details</div>
+            <div class="form-grid">
+              <div class="form-group"><label class="form-label">Brand <span class="req">*</span></label><input class="form-control" id="e_brand"/></div>
+              <div class="form-group"><label class="form-label">Model <span class="req">*</span></label><input class="form-control" id="e_model"/></div>
+              <div class="form-group"><label class="form-label">Serial Number <span class="req">*</span></label><input class="form-control" id="e_serial"/></div>
+              <div class="form-group"><label class="form-label">Status</label><select class="form-control" id="e_status"><option>Available</option><option>In Use</option><option>Under Repair</option><option>Retired</option></select></div>
+              <div class="form-group" style="grid-column:1/-1"><label class="form-label">Specifications</label><input class="form-control" id="e_specs"/></div>
+            </div>
+          </div>
+          <div style="margin-bottom:20px">
+            <div class="section-label"><i class="fas fa-calendar-days"></i> Purchase & Warranty</div>
+            <div class="form-grid">
+              <div class="form-group"><label class="form-label">Purchase Date</label><input type="date" class="form-control" id="e_purchase"/></div>
+              <div class="form-group"><label class="form-label">Warranty Expiry</label><input type="date" class="form-control" id="e_warranty"/></div>
+            </div>
+          </div>
+          <div style="margin-bottom:20px">
+            <div class="section-label"><i class="fas fa-user-tie"></i> Assignment</div>
+            <div class="form-grid">
+              <div class="form-group"><label class="form-label">Assigned To</label><input class="form-control" id="e_assignedTo"/></div>
+              <div class="form-group"><label class="form-label">Department</label><input class="form-control" id="e_dept"/></div>
+              <div class="form-group"><label class="form-label">Assigned Date</label><input type="date" class="form-control" id="e_assignedDate"/></div>
+            </div>
+          </div>
+          <div style="margin-bottom:24px"><div class="form-group"><label class="form-label">Notes</label><textarea class="form-control" id="e_notes" rows="3"></textarea></div></div>
+          <div style="display:flex;gap:9px">
+            <button class="btn btn-primary" onclick="updateLaptop()"><i class="fas fa-floppy-disk"></i> Save Changes</button>
+            <button class="btn btn-ghost" onclick="openDetails(currentLaptopId)">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HISTORY -->
+    <div class="page" id="page-history">
+      <div class="card">
+        <div class="card-header"><span class="card-title"><i class="fas fa-people-arrows" style="color:var(--accent);margin-right:8px"></i>Assignment History</span></div>
+        <div class="table-wrapper"><table><thead><tr><th>Laptop</th><th>Serial No.</th><th>Assigned To</th><th>Department</th><th>Assigned Date</th><th>Returned</th><th>Status</th></tr></thead><tbody id="history-tbody"></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- AUDIT -->
+    <div class="page" id="page-audit">
+      <div class="card">
+        <div class="card-header"><span class="card-title"><i class="fas fa-clock-rotate-left" style="color:var(--accent);margin-right:8px"></i>Audit Log</span></div>
+        <div class="table-wrapper"><table><thead><tr><th>Date & Time</th><th>Laptop</th><th>Serial No.</th><th>Action</th><th>Changed By</th><th>Remarks</th></tr></thead><tbody id="audit-tbody"></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- TRASH -->
+    <div class="page" id="page-trash">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title"><i class="fas fa-trash-can" style="color:var(--danger);margin-right:8px"></i>Trash <span id="trashCount" style="font-size:12px;color:var(--text-muted);font-weight:400"></span></span>
+          <button class="btn btn-ghost btn-sm" onclick="showPage('list',null)"><i class="fas fa-arrow-left"></i> Back</button>
+        </div>
+        <div id="trash-empty" style="text-align:center;padding:48px;color:var(--text-muted);display:none"><i class="fas fa-trash-can" style="font-size:36px;opacity:.25;display:block;margin-bottom:10px"></i>Trash is empty.</div>
+        <div id="trash-content">
+          <div style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:8px;padding:11px 15px;margin-bottom:14px;font-size:12.5px;color:#fca5a5"><i class="fas fa-triangle-exclamation"></i> You can restore deleted laptops or permanently remove them.</div>
+          <div class="table-wrapper"><table><thead><tr><th>Brand / Model</th><th>Serial No.</th><th>Last Assigned</th><th>Actions</th></tr></thead><tbody id="trash-tbody"></tbody></table></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- DELETE MODAL -->
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal-box">
+    <div class="modal-title"><i class="fas fa-trash-can" style="color:var(--danger);margin-right:8px"></i>Move to Trash?</div>
+    <p class="modal-msg">This laptop will be moved to Trash. You can restore it later.</p>
+    <div style="margin-bottom:16px"><div class="form-group"><label class="form-label">Reason (optional)</label><input type="text" id="deleteRemarks" class="form-control" placeholder="e.g. Damaged, end of life..."/></div></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="document.getElementById('deleteModal').classList.remove('open')">Cancel</button>
+      <button class="btn btn-danger" onclick="deleteLaptop()"><i class="fas fa-trash-can"></i> Move to Trash</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>
